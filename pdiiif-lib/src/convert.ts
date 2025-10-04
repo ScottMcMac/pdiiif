@@ -436,7 +436,7 @@ async function buildOutlineFromRanges(
 
   // We have to recurse, this small closure handles each node in the tree
   const isCanvas = (ri: RangeItems | NormalizedRangeItemSchemas): ri is Reference<'Canvas'> =>
-    typeof ri !== 'string' && ri.type === 'Canvas';
+    typeof ri !== 'string' && (ri.type === 'Canvas' || (ri.type == 'SpecificResource' && ri.source?.type === 'Canvas'));
   const isRange = (ri: RangeItems | NormalizedRangeItemSchemas): ri is Reference<'Range'> =>
     typeof ri !== 'string' && ri.type == 'Range';
 
@@ -447,13 +447,12 @@ async function buildOutlineFromRanges(
     if (seenRanges.has(range.id)) {
       return;
     }
-    // Double filtering with `isCanvas` is necessary because of TS limitations
     const firstCanvas = range.items
       .filter(isCanvas)
-      .filter((c) => canvasIds.indexOf(c.id!) >= 0)
-      .filter(isCanvas)
+      .map((c) => c.type === 'SpecificResource' ? c.source : c)
+      .filter((c) => canvasIds.indexOf(c?.id!) >= 0)
       .sort((a, b) =>
-        canvasIds.indexOf(a.id!) > canvasIds.indexOf(b.id!) ? -1 : 1
+        canvasIds.indexOf(a!.id!) > canvasIds.indexOf(b!.id!) ? -1 : 1
       )[0];
     const rangeLabel = getI18nValue(
       range.label ?? '<untitled>',
