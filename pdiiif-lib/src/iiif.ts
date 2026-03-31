@@ -156,7 +156,10 @@ export function supportsScaling(profile: ImageProfile): boolean {
 export async function fetchFullImageService(
   serviceRef: ImageService
 ): Promise<ImageService> {
-  const serviceUrl = `${serviceRef['@id'] ?? serviceRef.id}/info.json`;
+  const serviceId = serviceRef['@id'] ?? serviceRef.id;
+  const serviceUrl = serviceId.endsWith('/info.json')
+    ? serviceId
+    : `${serviceId}/info.json`;
   const resp = await fetch(serviceUrl);
   const res = await resp.json();
   return res as ImageService;
