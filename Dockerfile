@@ -9,8 +9,6 @@ ENV PDIIIF_SENTRY_TUNNEL_ENDPOINT=${PDIIIF_SENTRY_TUNNEL_ENDPOINT}
 
 RUN npm install -g pnpm
 
-RUN pnpx playwright install --with-deps --only-shell chromium
-
 WORKDIR /app
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -19,6 +17,10 @@ COPY pdiiif-lib/package.json ./pdiiif-lib/
 COPY pdiiif-web/package.json ./pdiiif-web/
 
 RUN pnpm i
+
+# Install the browser binary matching the Playwright version from dependencies.
+# We use chromium-headless-shell because cover page rendering only needs headless mode.
+RUN pnpm --filter pdiiif-api exec playwright install --with-deps chromium-headless-shell
 
 COPY . .
 
