@@ -395,9 +395,9 @@ app.get(
           ppi: ppi === undefined ? undefined : Number.parseInt(ppi as string),
           onProgress,
           onNotification,
-          coverPageCallback: async (params) => {
-            return await coverPageGenerator.render(params);
-          },
+          coverPageCallback: coverPageGenerator.isReady()
+            ? async (params) => await coverPageGenerator.render(params)
+            : undefined,
           // Reduce chance of accidental DoS on image servers, two concurrent downloads per requested PDF
           concurrency: 2,
           abortController,
@@ -499,7 +499,16 @@ if (process.env.CFG_SENTRY_DSN) {
   app.use(Sentry.Handlers.errorHandler());
 }
 
-coverPageGenerator.start().then(() => {
+coverPageGenerator
+  .start()
+  .catch((err) => {
+    log.error({
+      message:
+        'Failed to initialize cover page generator, PDF generation will continue without cover pages.',
+      error: err,
+    });
+  })
+  .then(() => {
   const port = Number.parseInt(process.env.CFG_PORT ?? '31337', 10);
   const host = process.env.CFG_HOST ?? '127.0.0.1';
   const sslCertPatht = process.env.CFG_SSL_CERT;
@@ -520,7 +529,7 @@ coverPageGenerator.start().then(() => {
       log.info(`server started at http://${host}:${port}`);
     });
   }
-});
+  });
 
 process.on('unhandledRejection', function (err: Error) {
   if (

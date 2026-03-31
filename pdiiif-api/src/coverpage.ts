@@ -110,6 +110,10 @@ export class CoverPageGenerator {
     this.browser = undefined;
   }
 
+  isReady(): boolean {
+    return !!this.browser && !!this.coverPageTemplate;
+  }
+
   async render(params: CoverPageParams): Promise<Uint8Array> {
     if (!this.browser || !this.coverPageTemplate) {
       throw 'CoverPageGenerator must be started before it can render cover pages.';
